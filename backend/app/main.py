@@ -8,6 +8,20 @@ from app.core.database import init_db, get_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
+    print("🚀 Starting APMHOS Backend...")
+    print(f"📡 CORS Origins: {settings.CORS_ORIGINS}")
+    
+    # Mask password for logging
+    db_log = settings.DATABASE_URL
+    if ":" in db_log and "@" in db_log:
+        try:
+            prefix, rest = db_log.split("://", 1)
+            creds, host_path = rest.split("@", 1)
+            user = creds.split(":", 1)[0]
+            db_log = f"{prefix}://{user}:****@{host_path}"
+        except: pass
+    print(f"🗄️ Database: {db_log}")
+    
     init_db()
     yield
     # Shutdown logic (none needed for now)

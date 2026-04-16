@@ -12,7 +12,7 @@ INSERT INTO users (
 ) VALUES
 (
     'add94b95-e096-460d-a899-f472ad915349',
-    'Aryan Sharma',
+    'Aryan Dagar',
     29,
     'Female',
     'Intermediate',
@@ -26,7 +26,7 @@ INSERT INTO users (
 ),
 (
     '471334ca-a247-4e88-af9b-9366e58403a3',
-    'Shagun Verma',
+    'Shagun Yadav',
     34,
     'Male',
     'Advanced',
@@ -40,7 +40,7 @@ INSERT INTO users (
 ),
 (
     '0a216aab-df8d-40c2-a1b1-b855777db9c5',
-    'Umang Gupta',
+    'Umang Yadav',
     26,
     'Other',
     'Beginner',
