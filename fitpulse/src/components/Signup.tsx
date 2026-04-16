@@ -40,10 +40,15 @@ export default function Signup({ onSignupSuccess, onToggleLogin }: SignupProps) 
                         <input
                             className="input"
                             type="text"
+                            name="name"
+                            autoComplete="name"
                             placeholder="John Doe"
                             required
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => ({ ...prev, name: val }));
+                            }}
                         />
                     </div>
                     <div>
@@ -51,12 +56,16 @@ export default function Signup({ onSignupSuccess, onToggleLogin }: SignupProps) 
                         <input
                             className="input"
                             type="email"
+                            name="email"
                             inputMode="email"
                             autoComplete="email"
                             placeholder="john@example.com"
                             required
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => ({ ...prev, email: val }));
+                            }}
                         />
                     </div>
                     <div>
@@ -64,10 +73,15 @@ export default function Signup({ onSignupSuccess, onToggleLogin }: SignupProps) 
                         <input
                             className="input"
                             type="password"
+                            name="password"
+                            autoComplete="new-password"
                             placeholder="••••••••"
                             required
                             value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => ({ ...prev, password: val }));
+                            }}
                         />
                     </div>
 
