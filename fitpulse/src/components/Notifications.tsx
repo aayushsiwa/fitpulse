@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
+interface Reminder {
+    id: number;
+    msg: string;
+}
 
-const reminders = [
+const reminders: Reminder[] = [
     { id: 1, msg: "💧 Time to drink water!" },
     { id: 2, msg: "🧘 Take a stretch break" },
     { id: 3, msg: "🏃 Don't forget your workout today!" },
@@ -8,7 +12,7 @@ const reminders = [
 ];
 
 export default function Notifications() {
-    const [active, setActive] = useState(null);
+    const [active, setActive] = useState<Reminder | null>(null);
 
     useEffect(() => {
         // Start the cycle after a delay (e.g. 30s) to avoid immediate nag on load

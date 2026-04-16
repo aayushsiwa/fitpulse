@@ -7,9 +7,15 @@ const energyOptions = [
     { label: "Low", icon: "🪫", desc: "Just showing up" },
 ];
 
-const calorieRates = { HIIT: 12, Cardio: 10, Strength: 8, Yoga: 4 };
+const calorieRates: Record<string, number> = { HIIT: 12, Cardio: 10, Strength: 8, Yoga: 4 };
 
-export default function ActivityLog({ todayLog, onLogUpdate, userId: _userId }) {
+interface ActivityLogProps {
+    todayLog: any;
+    onLogUpdate: (log: any) => void;
+    userId: string;
+}
+
+export default function ActivityLog({ todayLog, onLogUpdate, userId: _userId }: ActivityLogProps) {
     const [saved, setSaved] = useState(false);
     const [syncing, setSyncing] = useState(false);
 

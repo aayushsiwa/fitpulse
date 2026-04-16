@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getRecommendation } from "../api";
 import type { Recommendation } from "../api";
 
-const schedules = {
+const schedules: Record<string, any[]> = {
     weightloss: [
         {
             day: "Mon",
@@ -183,7 +183,11 @@ const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const today = new Date().getDay();
 const todayIdx = today === 0 ? 6 : today - 1;
 
-export default function Schedule({ user }) {
+interface ScheduleProps {
+    user: any;
+}
+
+export default function Schedule({ user }: ScheduleProps) {
     const plan = schedules[user.goal] || schedules.fitness;
     const [rec, setRec] = useState<Recommendation | null>(null);
     const [recLoading, setRecLoading] = useState(false);
@@ -470,7 +474,7 @@ export default function Schedule({ user }) {
 
             {/* All days */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {plan.map((item, i) => (
+                {plan.map((item: any, i: number) => (
                     <div
                         key={item.day}
                         className="card card-sm"

@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { signup } from "../api";
 
-export default function Signup({ onSignupSuccess, onToggleLogin }) {
+interface SignupProps {
+    onSignupSuccess: (token: string) => void;
+    onToggleLogin: () => void;
+}
+
+export default function Signup({ onSignupSuccess, onToggleLogin }: SignupProps) {
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");

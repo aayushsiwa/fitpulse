@@ -23,7 +23,12 @@ const goals = [
 const levels = ["Beginner", "Intermediate", "Advanced"];
 const genders = ["Male", "Female", "Other"];
 
-export default function Onboarding({ onComplete, isLoading = false }) {
+interface OnboardingProps {
+    onComplete: (formData: any) => void;
+    isLoading?: boolean;
+}
+
+export default function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
         age: "",
@@ -36,7 +41,7 @@ export default function Onboarding({ onComplete, isLoading = false }) {
     });
     const [err, setErr] = useState("");
 
-    const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
     const next = () => {
         if (step === 0 && (!form.age || !form.gender || !form.height || !form.weight)) {

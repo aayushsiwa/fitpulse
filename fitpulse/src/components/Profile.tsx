@@ -1,7 +1,13 @@
-export default function Profile({ user, onLogout, onClose }) {
+interface ProfileProps {
+    user: any;
+    onLogout: () => void;
+    onClose: () => void;
+}
+
+export default function Profile({ user, onLogout, onClose }: ProfileProps) {
     const bmi = (Number(user.weight) / ((Number(user.height) / 100) ** 2)).toFixed(1);
     
-    const getBMICategory = (val) => {
+    const getBMICategory = (val: number) => {
         if (val < 18.5) return { label: "Underweight", color: "var(--red)" };
         if (val < 25) return { label: "Healthy", color: "var(--green)" };
         if (val < 30) return { label: "Overweight", color: "var(--yellow)" };

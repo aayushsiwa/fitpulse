@@ -5,7 +5,12 @@ const tabs = [
     { id: "insights", icon: "📊", label: "Insights" },
 ];
 
-export default function NavBar({ activeTab, setActiveTab }) {
+interface NavBarProps {
+    activeTab: string;
+    setActiveTab: (tab: string) => void;
+}
+
+export default function NavBar({ activeTab, setActiveTab }: NavBarProps) {
     return (
         <nav
             style={{

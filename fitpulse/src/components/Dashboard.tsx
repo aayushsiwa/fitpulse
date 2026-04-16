@@ -1,13 +1,20 @@
 import { useState } from "react";
 
-const goalLabel = {
+const goalLabel: Record<string, string> = {
     weightloss: "Weight Loss",
     muscle: "Muscle Gain",
     fitness: "General Fitness",
 };
-const goalIcon = { weightloss: "🔥", muscle: "💪", fitness: "⚡" };
+const goalIcon: Record<string, string> = { weightloss: "🔥", muscle: "💪", fitness: "⚡" };
 
-export default function Dashboard({ user, todayLog, onLogUpdate, onReset }) {
+interface DashboardProps {
+    user: any;
+    todayLog: any;
+    onLogUpdate: (log: any) => void;
+    onReset: () => void;
+}
+
+export default function Dashboard({ user, todayLog, onLogUpdate, onReset }: DashboardProps) {
     const [editSteps, setEditSteps] = useState(false);
     const [stepsInput, setStepsInput] = useState(todayLog.steps);
     const progress = Math.min((todayLog.steps / 8000) * 100, 100);
