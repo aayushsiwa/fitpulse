@@ -6,107 +6,109 @@ import Schedule from "./components/Schedule";
 import Visualizations from "./components/Visualizations";
 import Notifications from "./components/Notifications";
 import NavBar from "./components/NavBar";
+import { createUser, saveLog, getLogs } from "./api";
+import type { LogEntry } from "./api";
 import "./index.css";
 
+const today = new Date().toISOString().slice(0, 10);
+
+interface StoredUser {
+    id: string;
+    name: string;
+    age: string;
+    gender: string;
+    level: string;
+    goal: string;
+}
+
 export default function App() {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<StoredUser | null>(null);
     const [activeTab, setActiveTab] = useState("dashboard");
-    const [logs, setLogs] = useState([
-        {
-            date: "2025-04-10",
-            steps: 6200,
-            calories: 420,
-            mood: "Good",
-            workout: true,
-            energy: "High",
-            meal: "Oats, chicken rice, salad",
-        },
-        {
-            date: "2025-04-11",
-            steps: 4800,
-            calories: 310,
-            mood: "Okay",
-            workout: false,
-            energy: "Medium",
-            meal: "Toast, pasta",
-        },
-        {
-            date: "2025-04-12",
-            steps: 8100,
-            calories: 530,
-            mood: "Good",
-            workout: true,
-            energy: "High",
-            meal: "Eggs, grilled fish, veggies",
-        },
-        {
-            date: "2025-04-13",
-            steps: 3200,
-            calories: 210,
-            mood: "Tired",
-            workout: false,
-            energy: "Low",
-            meal: "Cereal, soup",
-        },
-        {
-            date: "2025-04-14",
-            steps: 7600,
-            calories: 490,
-            mood: "Good",
-            workout: true,
-            energy: "Medium",
-            meal: "Smoothie, rice bowl",
-        },
-        {
-            date: "2025-04-15",
-            steps: 5100,
-            calories: 360,
-            mood: "Okay",
-            workout: false,
-            energy: "Medium",
-            meal: "Sandwich, fruit",
-        },
-        {
-            date: "2025-04-16",
-            steps: 2800,
-            calories: 190,
-            mood: "Tired",
-            workout: false,
-            energy: "Low",
-            meal: "",
-        },
-    ]);
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [logsLoading, setLogsLoading] = useState(false);
+    const [onboarding, setOnboarding] = useState(false); // spinner in Onboarding
     const [todayLog, setTodayLog] = useState({
-        steps: 2800,
-        calories: 190,
-        mood: "Tired",
+        steps: 0,
+        calories: 0,
+        mood: "Good",
         workout: false,
-        energy: "Low",
+        energy: "Medium",
         meal: "",
     });
 
+    // ── Restore session from localStorage ──────────────────────────────────────
     useEffect(() => {
         const saved = localStorage.getItem("fitpulse_user");
-        if (saved) setUser(JSON.parse(saved));
+        if (saved) {
+            const u: StoredUser = JSON.parse(saved);
+            setUser(u);
+        }
     }, []);
 
-    const handleOnboard = (userData) => {
-        localStorage.setItem("fitpulse_user", JSON.stringify(userData));
-        setUser(userData);
+    // ── Hydrate logs from backend whenever we have a user ─────────────────────
+    useEffect(() => {
+        if (!user?.id) return;
+        setLogsLoading(true);
+        getLogs(user.id)
+            .then((fetched) => {
+                setLogs(fetched);
+                // Seed today's log state from the backend entry if it exists
+                const todayEntry = fetched.find((l) => l.date === today);
+                if (todayEntry) {
+                    setTodayLog({
+                        steps: todayEntry.steps,
+                        calories: todayEntry.calories,
+                        mood: todayEntry.mood,
+                        workout: todayEntry.workout,
+                        energy: todayEntry.energy,
+                        meal: "",
+                    });
+                }
+            })
+            .catch(console.error)
+            .finally(() => setLogsLoading(false));
+    }, [user?.id]);
+
+    // ── Onboarding complete ───────────────────────────────────────────────────
+    const handleOnboard = async (formData: Omit<StoredUser, "id">) => {
+        setOnboarding(true);
+        try {
+            const created = await createUser({
+                name: formData.name,
+                age: Number(formData.age),
+                gender: formData.gender,
+                fitness_level: formData.level,
+                goal: formData.goal,
+            });
+            const userData: StoredUser = { ...formData, id: created.id };
+            localStorage.setItem("fitpulse_user", JSON.stringify(userData));
+            setUser(userData);
+        } catch (err) {
+            console.error("Onboarding failed:", err);
+            // Fallback: save locally without a backend id
+            const userData: StoredUser = { ...formData, id: crypto.randomUUID() };
+            localStorage.setItem("fitpulse_user", JSON.stringify(userData));
+            setUser(userData);
+        } finally {
+            setOnboarding(false);
+        }
     };
 
     const handleReset = () => {
         localStorage.removeItem("fitpulse_user");
         setUser(null);
+        setLogs([]);
         setActiveTab("dashboard");
     };
 
-    const handleLogUpdate = (newLog) => {
+    // ── Log update (Dashboard quick-edit or ActivityLog save) ─────────────────
+    const handleLogUpdate = (newLog: typeof todayLog) => {
         setTodayLog(newLog);
-        const today = "2025-04-16";
+
+        // Optimistically update the in-memory logs list
         setLogs((prev) => {
             const existing = prev.findIndex((l) => l.date === today);
-            const entry = { date: today, ...newLog };
+            const entry: LogEntry = { date: today, ...newLog };
             if (existing >= 0) {
                 const updated = [...prev];
                 updated[existing] = entry;
@@ -114,9 +116,24 @@ export default function App() {
             }
             return [...prev, entry];
         });
+
+        // Persist to backend in the background
+        if (user?.id) {
+            saveLog({
+                user_id: user.id,
+                date: today,
+                steps: newLog.steps,
+                workout_done: newLog.workout,
+                energy_level: newLog.energy,
+                mood: newLog.mood,
+            }).catch(console.error);
+        }
     };
 
-    if (!user) return <Onboarding onComplete={handleOnboard} />;
+    if (!user)
+        return (
+            <Onboarding onComplete={handleOnboard} isLoading={onboarding} />
+        );
 
     return (
         <div className="app">
@@ -134,10 +151,18 @@ export default function App() {
                     <ActivityLog
                         todayLog={todayLog}
                         onLogUpdate={handleLogUpdate}
+                        userId={user.id}
                     />
                 )}
-                {activeTab === "schedule" && <Schedule user={user} />}
-                {activeTab === "insights" && <Visualizations logs={logs} />}
+                {activeTab === "schedule" && (
+                    <Schedule user={user} />
+                )}
+                {activeTab === "insights" && (
+                    <Visualizations
+                        logs={logs}
+                        isLoading={logsLoading}
+                    />
+                )}
             </div>
             <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>

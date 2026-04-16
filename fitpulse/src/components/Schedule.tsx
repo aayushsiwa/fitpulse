@@ -1,3 +1,7 @@
+import { useState, useEffect } from "react";
+import { getRecommendation } from "../api";
+import type { Recommendation } from "../api";
+
 const schedules = {
     weightloss: [
         {
@@ -181,6 +185,19 @@ const todayIdx = today === 0 ? 6 : today - 1;
 
 export default function Schedule({ user }) {
     const plan = schedules[user.goal] || schedules.fitness;
+    const [rec, setRec] = useState<Recommendation | null>(null);
+    const [recLoading, setRecLoading] = useState(false);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        setRecLoading(true);
+        getRecommendation(user.id)
+            .then((data) => {
+                if (!data.error) setRec(data);
+            })
+            .catch(console.error)
+            .finally(() => setRecLoading(false));
+    }, [user?.id]);
 
     return (
         <div style={{ padding: "52px 20px 24px" }}>
@@ -244,7 +261,113 @@ export default function Schedule({ user }) {
                 ))}
             </div>
 
-            {/* Today's highlight */}
+            {/* AI Recommendation */}
+            {(recLoading || rec) && (
+                <div
+                    className="card"
+                    style={{
+                        background:
+                            "linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%)",
+                        border: "1.5px solid var(--accent-glow)",
+                        marginBottom: 16,
+                        position: "relative",
+                        overflow: "hidden",
+                    }}
+                >
+                    <div
+                        style={{
+                            position: "absolute",
+                            right: -20,
+                            top: -20,
+                            width: 100,
+                            height: 100,
+                            borderRadius: "50%",
+                            background: "var(--accent-glow)",
+                            filter: "blur(40px)",
+                        }}
+                    />
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 12,
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "var(--accent2)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.1em",
+                            }}
+                        >
+                            ✨ AI Recommendation
+                        </span>
+                        {recLoading && <div className="spinner-sm" />}
+                    </div>
+                    {rec ? (
+                        <div style={{ position: "relative" }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 12,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <span style={{ fontSize: 32 }}>
+                                    {rec.workout_type.includes("yoga")
+                                        ? "🧘"
+                                        : rec.workout_type.includes("HIIT")
+                                          ? "⚡"
+                                          : rec.workout_type.includes("cardio")
+                                            ? "🏃"
+                                            : "💪"}
+                                </span>
+                                <div>
+                                    <div
+                                        style={{
+                                            fontFamily: "var(--font-head)",
+                                            fontWeight: 700,
+                                            fontSize: 20,
+                                            textTransform: "capitalize",
+                                        }}
+                                    >
+                                        {rec.workout_type}
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            gap: 8,
+                                            fontSize: 12,
+                                            color: "var(--text2)",
+                                        }}
+                                    >
+                                        <span>⏱️ {rec.duration_minutes} min</span>
+                                        <span>•</span>
+                                        <span style={{ textTransform: "capitalize" }}>
+                                            📊 {rec.intensity} intensity
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>
+                                Based on your current <b>{rec.intensity}</b> energy level and <b>{user.goal}</b> goal, this workout is perfectly optimized for you right now.
+                            </p>
+                        </div>
+                    ) : (
+                        <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <p style={{ fontSize: 13, color: "var(--text2)" }}>Fetching best workout...</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="divider" style={{ margin: "24px 0" }} />
+
+            {/* Today's highlight (Static fallback/reference) */}
             <div
                 className="card"
                 style={{

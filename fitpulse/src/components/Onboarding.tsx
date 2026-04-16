@@ -23,7 +23,7 @@ const goals = [
 const levels = ["Beginner", "Intermediate", "Advanced"];
 const genders = ["Male", "Female", "Other"];
 
-export default function Onboarding({ onComplete }) {
+export default function Onboarding({ onComplete, isLoading = false }) {
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
         name: "",
@@ -327,8 +327,14 @@ export default function Onboarding({ onComplete }) {
                 <button
                     className="btn btn-primary btn-full btn-lg"
                     onClick={next}
+                    disabled={isLoading}
+                    style={{ opacity: isLoading ? 0.7 : 1 }}
                 >
-                    {step < 2 ? "Continue →" : "Let's Go 🚀"}
+                    {step < 2
+                        ? "Continue →"
+                        : isLoading
+                          ? "Setting up… ⏳"
+                          : "Let's Go 🚀"}
                 </button>
             </div>
         </div>

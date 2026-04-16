@@ -14,14 +14,15 @@ interface Log {
     date: string;
     steps: number;
     calories: number;
-    mood: "Good" | "Okay" | "Tired";
+    mood: string;
     workout: boolean;
-    energy: "High" | "Medium" | "Low";
+    energy: string;
     meal?: string;
 }
 
 interface VisualizationsProps {
     logs: Log[];
+    isLoading?: boolean;
 }
 
 const moodScore: Record<string, number> = { Good: 3, Okay: 2, Tired: 1 };
@@ -68,7 +69,30 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export default function Visualizations({ logs }: VisualizationsProps) {
+export default function Visualizations({ logs, isLoading = false }: VisualizationsProps) {
+    if (isLoading) {
+        return (
+            <div style={{ padding: "52px 20px 24px" }}>
+                <h2 className="section-title" style={{ marginBottom: 4 }}>Insights</h2>
+                <p className="section-sub" style={{ marginBottom: 24 }}>Loading your data…</p>
+                {[160, 140, 120].map((h, i) => (
+                    <div
+                        key={i}
+                        className="card"
+                        style={{
+                            marginBottom: 16,
+                            height: h + 52,
+                            background:
+                                "linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%)",
+                            backgroundSize: "200% 100%",
+                            animation: "shimmer 1.4s infinite",
+                        }}
+                    />
+                ))}
+            </div>
+        );
+    }
+
     if (!logs || logs.length === 0) {
         return (
             <div

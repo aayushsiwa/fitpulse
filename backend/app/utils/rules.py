@@ -1,9 +1,11 @@
 def generate_recommendation(goal, energy_level):
-    if energy_level == "low":
+    energy = (energy_level or "").lower()
+
+    if energy == "low":
         intensity = "low"
         workout = "walking / yoga"
         duration = 20
-    elif energy_level == "medium":
+    elif energy == "medium":
         intensity = "medium"
         workout = "moderate cardio"
         duration = 30
@@ -12,10 +14,10 @@ def generate_recommendation(goal, energy_level):
         workout = "HIIT / strength"
         duration = 45
 
-    # Goal adjustment
-    if goal == "muscle_gain":
+    # Goal adjustment — frontend sends "muscle", "weightloss", "fitness"
+    if goal in ("muscle", "muscle_gain"):
         workout = "strength training"
-    elif goal == "weight_loss":
+    elif goal in ("weightloss", "weight_loss"):
         workout = "cardio"
 
     return {

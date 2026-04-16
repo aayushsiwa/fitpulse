@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { saveLog } from "../api";
 
-export default function ActivityLog({ todayLog, onLogUpdate }) {
+export default function ActivityLog({ todayLog, onLogUpdate, userId: _userId }) {
     const [local, setLocal] = useState({ ...todayLog });
     const [saved, setSaved] = useState(false);
 
@@ -9,11 +10,33 @@ export default function ActivityLog({ todayLog, onLogUpdate }) {
         setSaved(false);
     };
 
-    const handleSave = () => {
+    const [syncing, setSyncing] = useState(false);
+
+    const handleSave = async () => {
         const calories = Math.round(local.steps * 0.06);
-        onLogUpdate({ ...local, calories });
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        const logData = { ...local, calories };
+
+        // Update local state
+        onLogUpdate(logData);
+
+        // Sync to backend
+        setSyncing(true);
+        try {
+            await saveLog({
+                user_id: _userId,
+                date: new Date().toISOString().slice(0, 10),
+                steps: local.steps,
+                workout_done: local.workout,
+                energy_level: local.energy,
+                mood: local.mood,
+            });
+            setSaved(true);
+        } catch (err) {
+            console.error("Sync failed:", err);
+        } finally {
+            setSyncing(false);
+            setTimeout(() => setSaved(false), 2000);
+        }
     };
 
     return (
@@ -120,12 +143,14 @@ export default function ActivityLog({ todayLog, onLogUpdate }) {
                 <button
                     className="btn btn-primary btn-full btn-lg"
                     onClick={handleSave}
+                    disabled={syncing}
                     style={{
                         background: saved ? "var(--green)" : undefined,
+                        opacity: syncing ? 0.7 : 1,
                         transition: "background 0.3s",
                     }}
                 >
-                    {saved ? "✅ Saved!" : "Save Check-in"}
+                    {syncing ? "⌛ Syncing..." : saved ? "✅ Saved!" : "Save Check-in"}
                 </button>
             </div>
         </div>
