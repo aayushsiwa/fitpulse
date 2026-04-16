@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Boolean, Date
+from sqlalchemy import Column, String, Integer, Boolean, Date, Float
 from app.core.database import Base
 import uuid
 
@@ -11,5 +11,8 @@ class DailyLog(Base):
     date = Column(Date)
     steps = Column(Integer)
     workout_done = Column(Boolean)
+    workout_type = Column(String, nullable=True)
+    workout_duration = Column(Integer, nullable=True)
     energy_level = Column(String)
-    mood = Column(String)
+    meal = Column(String, nullable=True)
+    weight = Column(Float, nullable=True)

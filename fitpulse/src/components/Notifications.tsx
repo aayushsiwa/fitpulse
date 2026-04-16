@@ -1,22 +1,34 @@
 import { useState, useEffect } from "react";
 
 const reminders = [
-    { id: 1, msg: "💧 Time to drink water!", delay: 5000 },
-    { id: 2, msg: "🧘 Take a stretch break", delay: 15000 },
-    { id: 3, msg: "🏃 Don't forget your workout today!", delay: 25000 },
+    { id: 1, msg: "💧 Time to drink water!" },
+    { id: 2, msg: "🧘 Take a stretch break" },
+    { id: 3, msg: "🏃 Don't forget your workout today!" },
+    { id: 4, msg: "🌬️ Take 3 deep breaths" },
 ];
 
 export default function Notifications() {
     const [active, setActive] = useState(null);
 
     useEffect(() => {
-        const timers = reminders.map((r) =>
-            setTimeout(() => {
-                setActive(r);
-                setTimeout(() => setActive(null), 4000);
-            }, r.delay),
-        );
-        return () => timers.forEach(clearTimeout);
+        // Start the cycle after a delay (e.g. 30s) to avoid immediate nag on load
+        const initialDelay = setTimeout(() => {
+            setActive(reminders[Math.floor(Math.random() * reminders.length)]);
+            setTimeout(() => setActive(null), 5000);
+        }, 30000);
+
+        // Then repeat every 60 seconds
+        const interval = setInterval(() => {
+            const r = reminders[Math.floor(Math.random() * reminders.length)];
+            setActive(r);
+            // Auto-hide after 5s
+            setTimeout(() => setActive(null), 5000);
+        }, 60000);
+
+        return () => {
+            clearTimeout(initialDelay);
+            clearInterval(interval);
+        };
     }, []);
 
     if (!active) return null;

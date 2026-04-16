@@ -88,6 +88,15 @@ When the backend starts, `init_db()` attempts to:
 1. create the `fitpulse` DB if missing
 2. create tables from SQLAlchemy models
 
+Database bootstrap and demo seed files:
+
+```bash
+psql -d postgres -f backend/init.sql
+psql -d fitpulse -f backend/seed.sql
+```
+
+These scripts are useful when you want to recreate the schema manually or load demo rows for presentations.
+
 ### 3) Frontend setup
 
 ```bash

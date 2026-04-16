@@ -1,10 +1,5 @@
 import { useState } from "react";
 
-const moodMap = {
-    Good: { icon: "😊", color: "var(--green)", bg: "var(--green-dim)" },
-    Okay: { icon: "😐", color: "var(--yellow)", bg: "var(--yellow-dim)" },
-    Tired: { icon: "😴", color: "var(--red)", bg: "var(--red-dim)" },
-};
 const goalLabel = {
     weightloss: "Weight Loss",
     muscle: "Muscle Gain",
@@ -15,19 +10,15 @@ const goalIcon = { weightloss: "🔥", muscle: "💪", fitness: "⚡" };
 export default function Dashboard({ user, todayLog, onLogUpdate, onReset }) {
     const [editSteps, setEditSteps] = useState(false);
     const [stepsInput, setStepsInput] = useState(todayLog.steps);
-    const mood = moodMap[todayLog.mood];
     const progress = Math.min((todayLog.steps / 8000) * 100, 100);
 
     const handleStepsSubmit = () => {
         onLogUpdate({
             ...todayLog,
             steps: Number(stepsInput),
-            calories: Math.round(Number(stepsInput) * 0.06),
         });
         setEditSteps(false);
     };
-
-    const setMood = (m) => onLogUpdate({ ...todayLog, mood: m });
 
     return (
         <div style={{ padding: "0 20px" }}>
@@ -286,76 +277,10 @@ export default function Dashboard({ user, todayLog, onLogUpdate, onReset }) {
                 </div>
             </div>
 
-            {/* Mood row */}
-            <div
-                className="card card-sm"
-                style={{
-                    marginBottom: 16,
-                    animation: "fadeUp 0.4s ease 0.1s both",
-                }}
-            >
-                <p
-                    style={{
-                        fontSize: 12,
-                        color: "var(--text2)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        marginBottom: 10,
-                    }}
-                >
-                    How are you feeling?
-                </p>
-                <div style={{ display: "flex", gap: 8 }}>
-                    {Object.entries(moodMap).map(([m, info]) => (
-                        <button
-                            key={m}
-                            onClick={() => setMood(m)}
-                            style={{
-                                flex: 1,
-                                padding: "10px 8px",
-                                borderRadius: "var(--radius-sm)",
-                                border: `1.5px solid ${todayLog.mood === m ? info.color : "var(--border)"}`,
-                                background:
-                                    todayLog.mood === m
-                                        ? info.bg
-                                        : "var(--bg3)",
-                                cursor: "pointer",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: 4,
-                                transition: "all 0.2s",
-                            }}
-                        >
-                            <span style={{ fontSize: 22 }}>{info.icon}</span>
-                            <span
-                                style={{
-                                    fontSize: 12,
-                                    fontWeight: 500,
-                                    color:
-                                        todayLog.mood === m
-                                            ? info.color
-                                            : "var(--text2)",
-                                }}
-                            >
-                                {m}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
 
             {/* Quick stats grid */}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 12,
-                    marginBottom: 24,
-                    animation: "fadeUp 0.4s ease 0.2s both",
-                }}
-            >
-                {[
+            {(() => {
+                const stats = [
                     {
                         label: "Energy",
                         val: todayLog.energy,
@@ -367,9 +292,22 @@ export default function Dashboard({ user, todayLog, onLogUpdate, onReset }) {
                         val: todayLog.meal || "Not logged",
                         icon: "🥗",
                         color: "var(--green)",
+                        hidden: true
                     },
-                ].map((s) => (
-                    <div key={s.label} className="card card-sm">
+                ].filter(s => !s.hidden);
+
+                return (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: stats.length > 1 ? "1fr 1fr" : "1fr",
+                            gap: 12,
+                            marginBottom: 24,
+                            animation: "fadeUp 0.4s ease 0.2s both",
+                        }}
+                    >
+                        {stats.map((s) => (
+                            <div key={s.label} className="card card-sm">
                         <div style={{ fontSize: 20, marginBottom: 6 }}>
                             {s.icon}
                         </div>
@@ -398,8 +336,58 @@ export default function Dashboard({ user, todayLog, onLogUpdate, onReset }) {
                             {s.label}
                         </div>
                     </div>
-                ))}
-            </div>
+                        ))}
+                    </div>
+                );
+            })()}
+
+            {/* Weight Progress Card */}
+            {user.target_weight && (
+                <div 
+                    className="card"
+                    style={{
+                        marginBottom: 24,
+                        background: "linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%)",
+                        border: "1px solid var(--border)",
+                        animation: "fadeUp 0.4s ease 0.3s both"
+                    }}
+                >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                        <div>
+                            <p style={{ fontSize: 11, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                                Goal Progress
+                            </p>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                                <span style={{ fontSize: 32, fontWeight: 800, color: "var(--accent)" }}>
+                                    {user.weight}
+                                </span>
+                                <span style={{ fontSize: 14, color: "var(--text2)" }}>kg current</span>
+                            </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text)" }}>
+                                {user.target_weight} <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.6 }}>kg goal</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: "var(--accent2)", fontWeight: 600, marginTop: 4 }}>
+                                {Math.abs(Number(user.weight) - Number(user.target_weight)).toFixed(1)} kg to go
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Progress slider visually showing distance to goal */}
+                    <div style={{ height: 4, background: "var(--bg3)", borderRadius: 2, marginTop: 16, position: "relative" }}>
+                        <div 
+                            style={{ 
+                                height: "100%", 
+                                width: "60%", // Static for UI mock but logic can be added
+                                background: "var(--accent)", 
+                                borderRadius: 2,
+                                boxShadow: "0 0 10px var(--accent-glow)"
+                            }} 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

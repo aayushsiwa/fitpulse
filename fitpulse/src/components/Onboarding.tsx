@@ -26,18 +26,20 @@ const genders = ["Male", "Female", "Other"];
 export default function Onboarding({ onComplete, isLoading = false }) {
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
-        name: "",
         age: "",
         gender: "",
         level: "",
         goal: "",
+        height: "",
+        weight: "",
+        target_weight: "",
     });
     const [err, setErr] = useState("");
 
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
     const next = () => {
-        if (step === 0 && (!form.name || !form.age || !form.gender)) {
+        if (step === 0 && (!form.age || !form.gender || !form.height || !form.weight)) {
             setErr("Please fill all fields");
             return;
         }
@@ -48,6 +50,23 @@ export default function Onboarding({ onComplete, isLoading = false }) {
         if (step === 2 && !form.goal) {
             setErr("Choose a goal");
             return;
+        }
+        if (step === 2 && form.goal === "weightloss") {
+            if (!form.target_weight) {
+                setErr("Please set a target weight");
+                return;
+            }
+            const h = Number(form.height) / 100;
+            const w = Number(form.target_weight);
+            const bmi = w / (h * h);
+            if (bmi < 18.5) {
+                setErr(`This target (BMI ${bmi.toFixed(1)}) is too low. Aim for a healthy BMI (18.5+).`);
+                return;
+            }
+            if (bmi > 24.9) {
+                setErr(`This target (BMI ${bmi.toFixed(1)}) is still in the overweight range. Try aiming for 18.5 - 24.9.`);
+                return;
+            }
         }
         setErr("");
         if (step < 2) setStep((s) => s + 1);
@@ -100,14 +119,11 @@ export default function Onboarding({ onComplete, isLoading = false }) {
             <div style={{ padding: "0 28px", flex: 1 }} className="fade-up">
                 {step === 0 && (
                     <>
-                        <h2
-                            className="section-title"
-                            style={{ marginBottom: 4 }}
-                        >
-                            Hey there 👋
+                        <h2 className="section-title" style={{ marginBottom: 4 }}>
+                            Personal Details
                         </h2>
                         <p className="section-sub" style={{ marginBottom: 28 }}>
-                            Let's set up your profile
+                            Let's set up your health profile
                         </p>
                         <div
                             style={{
@@ -116,41 +132,50 @@ export default function Onboarding({ onComplete, isLoading = false }) {
                                 gap: 16,
                             }}
                         >
-                            <div>
-                                <label className="label">Your Name</label>
-                                <input
-                                    className="input"
-                                    placeholder="e.g. Alex"
-                                    value={form.name}
-                                    onChange={(e) =>
-                                        set("name", e.target.value)
-                                    }
-                                />
+                            <div style={{ display: "flex", gap: 16 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label className="label">Age</label>
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        placeholder="25"
+                                        value={form.age}
+                                        onChange={(e) => set("age", e.target.value)}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label className="label">Gender</label>
+                                    <select 
+                                        className="input"
+                                        value={form.gender}
+                                        onChange={(e) => set("gender", e.target.value)}
+                                        style={{ height: 44 }}
+                                    >
+                                        <option value="">Select</option>
+                                        {genders.map(g => <option key={g} value={g}>{g}</option>)}
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label className="label">Age</label>
-                                <input
-                                    className="input"
-                                    type="number"
-                                    placeholder="e.g. 25"
-                                    value={form.age}
-                                    onChange={(e) => set("age", e.target.value)}
-                                    min={10}
-                                    max={99}
-                                />
-                            </div>
-                            <div>
-                                <label className="label">Gender</label>
-                                <div className="pill-group">
-                                    {genders.map((g) => (
-                                        <button
-                                            key={g}
-                                            className={`pill ${form.gender === g ? "active" : ""}`}
-                                            onClick={() => set("gender", g)}
-                                        >
-                                            {g}
-                                        </button>
-                                    ))}
+                            <div style={{ display: "flex", gap: 16 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label className="label">Height (cm)</label>
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        placeholder="175"
+                                        value={form.height}
+                                        onChange={(e) => set("height", e.target.value)}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label className="label">Weight (kg)</label>
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        placeholder="70"
+                                        value={form.weight}
+                                        onChange={(e) => set("weight", e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -306,6 +331,23 @@ export default function Onboarding({ onComplete, isLoading = false }) {
                                     </div>
                                 </button>
                             ))}
+
+                            {form.goal === "weightloss" && (
+                                <div className="fade-in" style={{ marginTop: 24, padding: 16, background: "var(--surface2)", borderRadius: "var(--radius)", border: "1.5px solid var(--accent-glow)" }}>
+                                    <label className="label">What is your Target Weight? (kg)</label>
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        placeholder="e.g. 65"
+                                        value={form.target_weight}
+                                        onChange={(e) => set("target_weight", e.target.value)}
+                                        style={{ marginTop: 8 }}
+                                    />
+                                    <p style={{ fontSize: 11, color: "var(--text2)", marginTop: 8 }}>
+                                        Setting a specific goal helps our AI tailor your plan more effectively.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

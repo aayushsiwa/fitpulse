@@ -314,15 +314,15 @@ export default function Schedule({ user }) {
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 12,
-                                    marginBottom: 12,
+                                    marginBottom: 16,
                                 }}
                             >
                                 <span style={{ fontSize: 32 }}>
-                                    {rec.workout_type.includes("yoga")
+                                    {rec.workout_type.toLowerCase().includes("yoga")
                                         ? "🧘"
-                                        : rec.workout_type.includes("HIIT")
+                                        : rec.workout_type.toLowerCase().includes("hiit")
                                           ? "⚡"
-                                          : rec.workout_type.includes("cardio")
+                                          : rec.workout_type.toLowerCase().includes("cardio")
                                             ? "🏃"
                                             : "💪"}
                                 </span>
@@ -333,6 +333,7 @@ export default function Schedule({ user }) {
                                             fontWeight: 700,
                                             fontSize: 20,
                                             textTransform: "capitalize",
+                                            marginBottom: 2,
                                         }}
                                     >
                                         {rec.workout_type}
@@ -353,8 +354,31 @@ export default function Schedule({ user }) {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Step Goal Badge */}
+                            <div 
+                                style={{ 
+                                    background: "rgba(255,255,255,0.05)",
+                                    borderRadius: "var(--radius-sm)",
+                                    padding: "10px 14px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    marginBottom: 16,
+                                    border: "1px solid var(--border)"
+                                }}
+                            >
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 18 }}>👣</span>
+                                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>Daily Step Target</span>
+                                </div>
+                                <span style={{ fontFamily: "var(--font-head)", fontWeight: 800, fontSize: 18, color: "var(--accent2)" }}>
+                                    {rec.step_goal.toLocaleString()}
+                                </span>
+                            </div>
+
                             <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>
-                                Based on your current <b>{rec.intensity}</b> energy level and <b>{user.goal}</b> goal, this workout is perfectly optimized for you right now.
+                                {rec.tip}
                             </p>
                         </div>
                     ) : (

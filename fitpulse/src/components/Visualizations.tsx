@@ -8,25 +8,28 @@ import {
     Tooltip,
     ResponsiveContainer,
     CartesianGrid,
+    ReferenceArea,
+    ReferenceLine,
 } from "recharts";
 
 interface Log {
     date: string;
     steps: number;
     calories: number;
-    mood: string;
     workout: boolean;
     energy: string;
+    weight?: number;
     meal?: string;
 }
 
 interface VisualizationsProps {
     logs: Log[];
+    user: { height: string; target_weight?: string };
     isLoading?: boolean;
 }
 
-const moodScore: Record<string, number> = { Good: 3, Okay: 2, Tired: 1 };
 const energyScore: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+const energyLabels: Record<number, string> = { 3: "High", 2: "Medium", 1: "Low" };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -60,7 +63,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                             color: p.color || p.fill || "var(--accent2)",
                         }}
                     >
-                        {p.name}: {p.value.toLocaleString()}
+                        {p.name}: {p.name === "Energy" ? energyLabels[p.value] || p.value : p.value.toLocaleString()}
                     </p>
                 ))}
             </div>
@@ -69,7 +72,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export default function Visualizations({ logs, isLoading = false }: VisualizationsProps) {
+export default function Visualizations({ logs, user, isLoading = false }: VisualizationsProps) {
     if (isLoading) {
         return (
             <div style={{ padding: "52px 20px 24px" }}>
@@ -125,16 +128,15 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
             date: formattedDate,
             steps: l.steps,
             calories: l.calories,
-            mood: moodScore[l.mood] || 0,
             energy: energyScore[l.energy] || 0,
-            moodLabel: l.mood,
+            weight: l.weight || null,
         };
     });
 
     const totalSteps = logs.reduce((s, l) => s + (l.steps || 0), 0);
     const avgSteps = Math.round(totalSteps / logs.length);
     const workoutDays = logs.filter((l) => l.workout).length;
-    const goodDays = logs.filter((l) => l.mood === "Good").length;
+    const highEnergyDays = logs.filter((l) => l.energy === "High").length;
 
     return (
         <div
@@ -171,9 +173,9 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
                         color: "var(--green)",
                     },
                     {
-                        label: "Good Days",
-                        val: `${goodDays}/7`,
-                        icon: "😊",
+                        label: "High Energy",
+                        val: `${highEnergyDays}/7`,
+                        icon: "⚡",
                         color: "var(--yellow)",
                     },
                 ].map((s) => (
@@ -279,7 +281,7 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
                 </ResponsiveContainer>
             </div>
 
-            {/* Mood vs Energy */}
+            {/* Energy Trend */}
             <div className="card" style={{ marginBottom: 16 }}>
                 <p
                     style={{
@@ -290,12 +292,11 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
                         marginBottom: 16,
                     }}
                 >
-                    🧠 Mood vs Energy
+                    🔋 Energy Recovery Trend
                 </p>
                 <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
                     {[
-                        { color: "#4ade80", label: "Mood" },
-                        { color: "#fbbf24", label: "Energy" },
+                        { color: "var(--yellow)", label: "Energy" },
                     ].map((l) => (
                         <div
                             key={l.label}
@@ -353,18 +354,11 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar
-                            dataKey="mood"
-                            name="Mood"
-                            fill="#4ade80"
-                            radius={[3, 3, 0, 0]}
-                            maxBarSize={20}
-                        />
-                        <Bar
                             dataKey="energy"
                             name="Energy"
-                            fill="#fbbf24"
+                            fill="var(--yellow)"
                             radius={[3, 3, 0, 0]}
-                            maxBarSize={20}
+                            maxBarSize={28}
                         />
                     </BarChart>
                 </ResponsiveContainer>
@@ -428,6 +422,68 @@ export default function Visualizations({ logs, isLoading = false }: Visualizatio
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+
+            {/* Weight History with BMI Logic */}
+            {logs.some((l) => l.weight) && (
+                <div className="card" style={{ marginTop: 16 }}>
+                    <p style={{ fontSize: 12, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>
+                        ⚖️ Weight Trend & BMI Status
+                    </p>
+                    {(() => {
+                        const h = Number(user.height) / 100;
+                        const h2 = h * h;
+                        const targets = {
+                            under: 18.5 * h2,
+                            healthy: 25 * h2,
+                            over: 30 * h2
+                        };
+                        return (
+                            <ResponsiveContainer width="100%" height={240}>
+                                <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <XAxis dataKey="date" tick={{ fill: "var(--text2)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                                    <YAxis domain={[Math.min(...data.map(d => d.weight || 100)) - 10, 'auto']} tick={{ fill: "var(--text2)", fontSize: 11 }} axisLine={false} tickLine={false} width={35} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    
+                                    {/* BMI Bands */}
+                                    <ReferenceArea y1={0} y2={targets.under} fill="var(--red)" fillOpacity={0.05} />
+                                    <ReferenceArea y1={targets.under} y2={targets.healthy} fill="var(--green)" fillOpacity={0.1} />
+                                    <ReferenceArea y1={targets.healthy} y2={targets.over} fill="var(--yellow)" fillOpacity={0.05} />
+                                    <ReferenceArea y1={targets.over} y2={200} fill="var(--red)" fillOpacity={0.05} />
+                                    
+                                    {/* Goal Line */}
+                                    {user.target_weight && (
+                                        <ReferenceLine y={Number(user.target_weight)} stroke="var(--accent)" strokeDasharray="3 3" label={{ value: "Goal", position: "right", fill: "var(--accent)", fontSize: 10 }} />
+                                    )}
+
+                                    <Area
+                                        type="monotone"
+                                        dataKey="weight"
+                                        name="Weight (kg)"
+                                        stroke="var(--accent2)"
+                                        strokeWidth={3}
+                                        fill="url(#weightGrad)"
+                                        dot={{ fill: "var(--accent2)", r: 4, strokeWidth: 2, stroke: "var(--surface)" }}
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                        connectNulls
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        );
+                    })()}
+                    <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+                        {[
+                            { color: "var(--green)", label: "Healthy Range" },
+                            { color: "var(--accent2)", label: "Your Weight" },
+                            { color: "var(--accent)", label: "Goal" },
+                        ].map(legend => (
+                            <div key={legend.label} style={{ fontSize: 10, color: "var(--text2)", display: "flex", alignItems: "center", gap: 4 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 2, background: legend.color }} /> {legend.label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

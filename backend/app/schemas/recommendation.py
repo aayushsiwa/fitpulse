@@ -8,3 +8,5 @@ class RecommendationResponse(BaseModel):
     workout_type: str
     intensity: str
     duration_minutes: int
+    tip: str
+    step_goal: int

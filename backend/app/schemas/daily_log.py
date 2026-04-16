@@ -7,5 +7,9 @@ class DailyLogCreate(BaseModel):
     date: date
     steps: int
     workout_done: bool
+    workout_type: str | None = None
+    workout_duration: int | None = None
     energy_level: str
-    mood: str
+    meal: str | None = None
+    weight: float | None = None
+    is_delta: bool = True
